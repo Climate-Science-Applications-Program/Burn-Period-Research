@@ -16,6 +16,16 @@ for(i in 1:length(fireProgList)){
 }
 fireProgList<-fireProgList[which(!is.na(temp))] 
 
+# find files
+temp<-c()
+names<-c()
+for(i in 1:length(fireProgList)){
+  temp[i]<-fireProgList[[i]][[1]]$DateAZ[1]
+  names[i]<-fireProgList[[i]][[1]]$FireName[1]
+}
+
+
+
 # load burnperiod climo dataset from burnPeriodClimo.R
 load("~/RProjects/BurnPeriodResearch/data/burnClimoList.RData")
 
@@ -211,7 +221,9 @@ for(i in 1:length(fireProgList)){
  print(fireProgList[[i]][[1]]$FireName[1])
 }
 
-i=12
+which(names=="SCHULTZ")
+
+i=85
 fireProg<-fireProgList[[i]][[4]]
 plot(fireProg)
 rasterVis::levelplot(fireProg, margin=FALSE, main=fireProgList[[i]][[1]]$FireName[1], par.settings = rasterVis::PuOrTheme)
@@ -226,7 +238,7 @@ rc <- reclassify(fireProg, as.matrix(tempDF))
  
 # plot fire event info
  
- fireEvent<-subset(fireEventsRAWS, FireName=="TELEGRAPH")
+ fireEvent<-subset(fireEventsRAWS, FireName=="SCHULTZ")
  
  fireEvent<-fireEvent[c("DateAZ","maxFRP","acres","bhrs20","bhrs10","minRH",
                         "maxVPD","minDP","maxWS","maxT","maxFFWI","maxHDW",

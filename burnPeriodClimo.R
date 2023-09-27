@@ -90,6 +90,7 @@ for(i in 1:length(file_list)){
                   maxDP = max(dp_F, na.rm = TRUE),
                   meanDP = mean(dp_F, na.rm = TRUE),
                   maxWS= max(`WindSpeed.mph.`, na.rm=TRUE),
+                  meanWS= mean(`WindSpeed.mph.`, na.rm=TRUE),
                   minT=min(`Temperature.F.`, na.rm = TRUE),
                   maxT= max(`Temperature.F.`, na.rm = TRUE),
                   meanT=mean(`Temperature.F.`, na.rm = TRUE),

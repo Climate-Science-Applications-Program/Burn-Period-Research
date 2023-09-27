@@ -28,7 +28,7 @@ burnListDF<-do.call(rbind, burnList)
 
 # correlations of all obs
  colnames(burnListDF)
- my_data <- burnListDF[, c(8,10,12:26, 34,35)]
+ my_data <- burnListDF[, c(8,10,12:27, 35,36)]
 cor(my_data, method = "spearman")
 GGally::ggcorr(my_data)
 rm(my_data)
@@ -49,6 +49,7 @@ moStats<- burnListDF %>% group_by(STA_NAME,month) %>%
                                   bhrs20vmaxVPD=as.numeric(cor.test(bhrs20, maxVPD, method = "spearman")$estimate),
                                   bhrs20vminDP=as.numeric(cor.test(bhrs20, minDP, method = "spearman")$estimate),
                                   bhrs20vmaxT=as.numeric(cor.test(bhrs20, maxT, method = "spearman")$estimate),
+                                  bhrs20vmeanWS=as.numeric(cor.test(bhrs20, meanWS, method = "spearman")$estimate),
                                   meanMaxT=mean(maxT,na.rm=TRUE),
                                   meanMinDP=mean(minDP,na.rm=TRUE),
                                   meanMinRH=mean(minRH, na.rm=TRUE),
@@ -130,10 +131,11 @@ p<-ggplot() +
   geom_polygon(data = sw_psa_df, aes(x = long, y = lat, group = group), fill="gray94", color="grey", alpha=0.8)  + # get the state border back on top
   #coord_fixed(xlim=c(out$meta$ll[1]-zoomLev, out$meta$ll[1]+zoomLev), ylim=c(out$meta$ll[2]-zoomLev, out$meta$ll[2]+zoomLev), ratio = 1) +
   coord_fixed(xlim=c(-115, -102.75), ylim=c(31, 37.5), ratio = 1) +
-  geom_point(data = moStats, aes(x = lon, y = lat, color=sdMeanDP), size=1.5)+
-  scale_color_gradientn(colors = c('#74add1','#fee090','#f46d43','#a50026'),name="r")+
+  geom_point(data = moStats, aes(x = lon, y = lat, color=bhrs20vmeanWS), size=1.5)+
+  #scale_color_gradientn(colors = c('#74add1','#fee090','#f46d43','#a50026'),name="r")+
+  scale_color_gradient2(low="blue",mid="grey",high="red", midpoint = 0)+
   facet_wrap(.~month)+
-  ggtitle("SD Mean Daily Dewpoint")
+  ggtitle("Burn Hrs 20 v mean WS")
 p
 
 temp<- moStats %>% group_by(month) %>%
@@ -356,15 +358,16 @@ ggplot() +
   ggtitle("Model R.Squared (scale(bhrs20_med_anom) ~ scale(anomDP) + scale(anomT))")  
 
 ##### plot time series of station data -----
-which(unique(burnListDF$STA_NAME)=="RINCON")
-temp<-subset(anoms, STA_NAME=="RINCON")
-temp<-subset(temp, date>="2020-05-01" & date<="2020-08-01")
-temp<-temp[,c("date","bhrs20_med_anom","anomT","anomDP")]
+which(unique(burnListDF$STA_NAME)=="FLAGSTAFF")
+temp<-subset(anoms, STA_NAME=="FLAGSTAFF")
+temp<-subset(temp, date>="2010-06-20" & date<="2010-06-30")
+temp<-temp[,c("date","bhrs20_med_anom","anomT","anomDP","meanT","meanDP","bhrs20")]
 temp<-tidyr::gather(temp, var, value, 2:4)
 
 ggplot(temp, aes(date,value, color=var))+
   geom_line()+
-  geom_hline(yintercept = 0)
+  geom_hline(yintercept = 0)+
+  ggtitle("FLAGSTAFF RAWS - Schulz Fire 6/20-6/30")
 
 # get RAWS time series for comparison with raws.dri.edu data
 temp<-subset(burnListDF, STA_NAME=="SAGUARO")

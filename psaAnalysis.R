@@ -82,11 +82,13 @@ moyrStats<- burnListDF %>% group_by(year,month) %>%
             meanBhrs20_anom=mean(bhrs20_med_anom))
 
 temp<-moyrStats
-temp<-subset(moyrStats, month %in% c(5,6,7,8,9))
+temp<-subset(moyrStats, month %in% c(8))
 
 ggplot(temp, aes(year,meanBhrs20, color=as.factor(month), group=as.factor(month)))+
   geom_line()+
-  ggtitle("Monthly Average Burn Period (RH<20%)")
+  geom_point()+
+  ggtitle("Monthly Average Burn Period (RH<20%)")+
+  theme_bw()
 ggplot(temp, aes(year,meanMaxVPD, color=as.factor(month), group=as.factor(month)))+
   geom_line()+
   ggtitle("Monthly Average maxVPD")
@@ -137,7 +139,15 @@ moPSAStats$date<-as.Date(paste0(moPSAStats$year,"-",moPSAStats$month,"-01"))
 
 # plot results
 temp<-moPSAStats
-temp<-subset(moPSAStats, month %in% c(7))
+temp<-subset(moPSAStats, month %in% c(8))
+temp<-subset(temp, !is.na(psa))
+
+ggplot(temp, aes(year,meanBhrs20, color=psa))+
+  geom_line()+
+  geom_point()+
+  ggtitle("August Average Burn Period (RH<20%)")+
+  theme_bw()
+
 
 ggplot(temp, aes(date,meanBhrs20))+
   geom_line()+

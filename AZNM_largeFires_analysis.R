@@ -20,7 +20,7 @@ for(i in 1:length(fireProgList)){
   temp[i]<-fireProgList[[i]][[1]]$DateAZ[1]
   names[i]<-fireProgList[[i]][[1]]$FireName[1]
 }
-fireProgList<-fireProgList[which(!is.na(temp))] 
+#fireProgList<-fireProgList[which(!is.na(temp))] 
 
 # subset to AZ/NM fires
 topten<-c("WALLOW","RODEO","CAVE CREEK COMPLEX","HORSESHOE 2","BUSH","TELEGRAPH","WOODBURY",
@@ -28,6 +28,7 @@ topten<-c("WALLOW","RODEO","CAVE CREEK COMPLEX","HORSESHOE 2","BUSH","TELEGRAPH"
           "SILVER","DONALDSON","DRY LAKE COMPLEX (DRY LAKES)","PASCO","MCDONALD","PONIL COMPLEX")
 
 fireProgList<-fireProgList[which(names %in% topten)]
+
 
 # load burnperiod climo dataset from burnPeriodClimo.R
 load("~/RProjects/BurnPeriodResearch/data/burnClimoList.RData")
@@ -100,6 +101,8 @@ ggplot(eventStats, aes(x=year,y=(maxAc),fill=as.factor(FireName)))+
   geom_bar(position="stack", stat="identity")+
   ggtitle("Total Acres/year - Top 10 largest AZ/NM Wildfires")
 
+ggplot(eventStats, aes(maxAc, meanMaxVPD, color=FireName))+
+  geom_point()
 
 
 # map fire progression with burn hours
@@ -108,7 +111,7 @@ for(i in 1:length(fireProgList)){
  print(fireProgList[[i]][[1]]$FireName[1])
 }
 
-i=1
+i=2
 fireProg<-fireProgList[[i]][[4]]
 plot(fireProg)
 rasterVis::levelplot(fireProg, margin=FALSE, main=fireProgList[[i]][[1]]$FireName[1], par.settings = rasterVis::PuOrTheme)
@@ -136,6 +139,7 @@ rc <- reclassify(fireProg, as.matrix(tempDF))
    ggtitle("Telegraph Fire Daily Variables")
  
 ##### plot top 10 fires for AZ/NM ----
+# RAWS or other daily fire weather anoms 
 # USDM intersection
 # GridMet metrics
 # PRISM SPI, SPEI
