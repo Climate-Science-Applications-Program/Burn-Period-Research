@@ -19,6 +19,11 @@ incidents<-subset(incidents, DISCOVERY_DATE>as.POSIXct("1999-12-31"))
 # subset to fire size
 incidents<-subset(incidents, FINAL_ACRES>=50000)
 
+# import and subset sitreps
+sitreps <- readr::read_csv("data/ICS209plus/ics209-plus-wf_sitreps_1999to2020.csv")
+sitreps <-subset(sitreps, INCIDENT_ID %in% incidents$INCIDENT_ID)
+
+
 #####
 # combine ICS incidents and burn period metrics
 
@@ -32,6 +37,7 @@ library(geosphere)
 
 # new list for FOD burn period
 incBurnPeriod<-list()
+sitrepBurnPeriod<-list()
 # temporary RAWS station list for distances
 geoStns<-stations[,c("LONGITUDE","LATITUDE")]
 
@@ -43,23 +49,46 @@ for(i in 1:nrow(incidents)){
   ranking<-rank(distances, ties.method = "first")
   # get closet RAWS dataframe
   tempDF<-burnList[[which.min(ranking)]]
-  
+  # join burn period to incident max days
   bpDF<-cbind.data.frame(tempDF[which(tempDF$date== as.Date(incidents$DISCOVERY_DATE[i])),c("bhrs20","bhrs20_med_anom")],
                         #tempDF[which(tempDF$date== as.Date(incidents$WF_PEAK_AERIAL_DATE[i])),c("bhrs20","bhrs20_med_anom")]
                         #tempDF[which(tempDF$date== as.Date(incidents$WF_PEAK_PERSONNEL_DATE[i])),c("bhrs20","bhrs20_med_anom")]
                         tempDF[which(tempDF$date== as.Date(incidents$WF_MAX_GROWTH_DATE[i])),c("bhrs20","bhrs20_med_anom")])
   colnames(bpDF)<-c("disc_bhrs20","disc_bhrs20_med_anom","maxGrowth_bhrs20","maxGrowth_bhrs20_med_anom")
   
-  tempDF<-cbind.data.frame(incidents[i,], bpDF,tempDF$STA_NAME[2],distances[which.min(ranking)])
-  colnames(tempDF)[(ncol(tempDF)-1):ncol(tempDF)]<-c("STATION_NAME","dist_to_RAWS_km")
+  tempDFbp<-cbind.data.frame(incidents[i,], bpDF,tempDF$STA_NAME[2],distances[which.min(ranking)])
+  colnames(tempDFbp)[(ncol(tempDFbp)-1):ncol(tempDFbp)]<-c("STATION_NAME","dist_to_RAWS_km")
   
-  incBurnPeriod[[i]]<-tempDF
+  # join bp to sitreps
+  tempSIT<-subset(sitreps, sitreps$INCIDENT_ID==incidents$INCIDENT_ID[i])
+  tempSIT$joinDate<-as.Date(tempSIT$REPORT_TO_DATE)
+  tempSIT$report_n<-nrow(tempSIT)
+  tempSIT<-merge(tempSIT, tempDF[,c("date","bhrs20","bhrs20_med_anom")], by.x ="joinDate", by.y="date")
+  
+  # save to lists
+  incBurnPeriod[[i]]<-tempDFbp
+  sitrepBurnPeriod[[i]]<-tempSIT
+  
   print(i)
 }
 
 incBurnPeriod<-do.call(rbind,incBurnPeriod)
+sitrepBurnPeriod<-do.call(rbind, sitrepBurnPeriod)
+
 #####
 
 # look at variability in burn period through events, does it vary a great deal in large fires?
 # does it correspond to control measures and increase in containment?
 
+library(ggplot2)
+library(magrittr)
+
+
+ggplot(subset(sitrepBurnPeriod, report_n>5))+
+  geom_line(aes(joinDate,bhrs20), color="orange")+
+  #geom_line(aes(joinDate,bhrs20_med_anom), color="red")+
+  geom_line(aes(joinDate, PCT_CONTAINED_COMPLETED))+
+  #geom_line( aes(x = joinDate, y = c(NA, PCT_CONTAINED_COMPLETED %>% diff())))+
+  facet_wrap(.~INCIDENT_NAME, scales = "free")
+  
+  

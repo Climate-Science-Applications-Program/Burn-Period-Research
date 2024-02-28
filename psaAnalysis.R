@@ -82,13 +82,42 @@ moyrStats<- burnListDF %>% group_by(year,month) %>%
             meanBhrs20_anom=mean(bhrs20_med_anom))
 
 temp<-moyrStats
-temp<-subset(moyrStats, month %in% c(8))
+temp<-subset(moyrStats, month %in% c(6,7))
 
 ggplot(temp, aes(year,meanBhrs20, color=as.factor(month), group=as.factor(month)))+
   geom_line()+
   geom_point()+
   ggtitle("Monthly Average Burn Period (RH<20%)")+
   theme_bw()
+
+ggplot(temp, aes(year,meanBhrs20, fill=as.factor(month), group=as.factor(month)))+
+  geom_bar(stat="identity", position = "dodge")+
+  #geom_line()+
+  #geom_point()+
+  geom_hline(yintercept = mean(subset(temp, month==6)$meanBhrs20))+
+  geom_hline(yintercept = mean(subset(temp, month==7)$meanBhrs20))+
+  ggtitle("Monthly Average Burn Period (RH<20%)")+
+  theme_bw()
+
+mean(subset(temp, month==6)$meanBhrs20)
+
+ggplot(temp, aes(year,meanMeanDP, color=as.factor(month), group=as.factor(month)))+
+  geom_line()+
+  geom_point()+
+  ggtitle("Monthly Average Dewpoint (C)")+
+  theme_bw()
+ggplot(temp, aes(meanBhrs20,meanMeanDP,color=as.factor(month), group=as.factor(month)))+
+  geom_point()+
+  geom_smooth(method = "lm")+
+  ggtitle("Monthly Burn Period (RH<%20) vs Mean DP")
+
+
+ggplot(temp, aes(year))+
+  geom_line(aes(y=meanBhrs20, color=as.factor(month), group=as.factor(month)))+
+  geom_line(aes(y=meanMeanDP, color=as.factor(month), group=as.factor(month)))
+  #scale_y_continuous(sec.axis = sec_axis(~ . * 5))
+
+
 ggplot(temp, aes(year,meanMaxVPD, color=as.factor(month), group=as.factor(month)))+
   geom_line()+
   ggtitle("Monthly Average maxVPD")
@@ -347,6 +376,31 @@ moYrStats<-merge(moyrStats,moYrFires, by.x=c("month","year"),by.y=c("month","FIR
 
 temp<-moYrStats
 temp<-subset(moYrStats, month %in% c(4,5,6,7))
+
+p1<-ggplot(temp, aes(year,totalAC, fill=as.factor(month), group=as.factor(month)))+
+  geom_bar(stat = "identity", position = "dodge")+
+  #geom_line()+
+  #geom_point()+
+  ggtitle("Monthly Total Ac burned")+
+  theme_bw()
+
+p2<-ggplot(temp, aes(year,meanBhrs20, fill=as.factor(month), group=as.factor(month)))+
+  geom_bar(stat = "identity", position = "dodge")+
+  #geom_line()+
+  #geom_point()+
+  ggtitle("Mean Burn Hours")+
+  theme_bw()
+
+p3<-cowplot::plot_grid(p1,p2,labels=c("a.","b."), ncol=1,align="v", rel_heights = c(1, 1))
+
+ggplot(temp, aes(meanBhrs20,log(totalAC), color=as.factor(month), group=as.factor(month)))+
+  #geom_bar(stat = "identity", position = "dodge")+
+  #geom_line()+
+  geom_point()+
+  geom_smooth(method="lm")+
+  ggtitle("Mean Burn Hours")+
+  theme_bw()
+
 
 fireYr<-temp %>% group_by(year) %>% 
                   summarize(bhrs20=mean(meanBhrs20),

@@ -184,6 +184,44 @@ ggplot(moStats, aes(elev,meanBhrs20))+
   facet_wrap(.~month)+
   ggtitle("Elevation vs Burn Hours (RH<20%)")
 
+# monthly variability metrics by mo/yr then mo
+
+moYrStats<- burnListDF %>% group_by(STA_NAME,month,year) %>%
+  summarise(medBhrs20=median(bhrs20, na.rm=TRUE),
+            iqrBhrs20=IQR(bhrs20, na.rm = TRUE),
+            meanMeanT=mean(meanT,na.rm=TRUE),
+            meanMeanDP=mean(meanDP,na.rm=TRUE),
+            sdMeanT=sd(meanT, na.rm = TRUE),
+            sdMeanDP=sd(meanDP, na.rm = TRUE),
+            elev=first(elev),
+            lat=first(LATITUDE),
+            lon=first(LONGITUDE))
+
+moStats<- moYrStats %>% group_by(STA_NAME,month) %>%
+  summarise(medBhrs20=mean(medBhrs20, na.rm=TRUE),
+            iqrBhrs20=mean(iqrBhrs20, na.rm = TRUE),
+            meanMeanT=mean(meanMeanT,na.rm=TRUE),
+            meanMeanDP=mean(meanMeanDP,na.rm=TRUE),
+            sdMeanT=mean(sdMeanT, na.rm = TRUE),
+            sdMeanDP=mean(sdMeanDP, na.rm = TRUE),
+            elev=first(elev),
+            lat=first(lat),
+            lon=first(lon))
+
+p<-ggplot() +
+  geom_polygon(data = states, aes(x = long, y = lat, group = group), fill=NA, color="black", size=0.1)  +
+  geom_polygon(data = sw_psa_df, aes(x = long, y = lat, group = group), fill="gray94", color="grey", alpha=0.8)  + # get the state border back on top
+  #coord_fixed(xlim=c(out$meta$ll[1]-zoomLev, out$meta$ll[1]+zoomLev), ylim=c(out$meta$ll[2]-zoomLev, out$meta$ll[2]+zoomLev), ratio = 1) +
+  coord_fixed(xlim=c(-115, -102.75), ylim=c(31, 37.5), ratio = 1) +
+  geom_point(data = moStats, aes(x = lon, y = lat, color=iqrBhrs20), size=1.5)+
+  scale_color_gradientn(colors = c('#74add1','#fee090','#f46d43','#a50026'),name="r")+
+  #scale_color_gradient2(low="blue",mid="grey",high="red", midpoint = 0)+
+  facet_wrap(.~month)+
+  ggtitle("SD Dew Point")
+p
+
+
+
 # to do...
 # season length based on burn period metric
 # time series analysis of temporal variability
