@@ -264,6 +264,16 @@ p<-ggplot(subset(burnListDF, psa %in% c("SW02","SW06S","SW12")), aes(y=bhrs20, x
 
 p
 ggsave(filename="./figures/Fig4_moPSAbox.png", width=7, height=5, dpi = 600, device='png', p)
+
+# stations per psa/area -- reviewer comment
+# SW02 13 stations, 44268245311 m2, 4,426,825 ha, 340525ha/station
+# SW06S 16 stations, 51308426627 m2, 5,130,843 ha, 320677ha/station
+# SW12 7 stations, 24008303676 m2, 2,400,830 ha, 342975ha/station
+f<-sf::st_as_sf(sw_psa)
+f$area <- sf::st_area(f) #Take care of units
+f$hectares<-f$area*0.0001
+
+
 #####
 
 ##### FIGURE 4 temp/dewpoint modeling -----
@@ -273,7 +283,7 @@ library(broom)
 library(purrr)
 
 # calculate anomalies
-anoms<-burnListDF[,c("month","STA_NAME","meanDP","meanT","bhrs20","doy","date","bhrs20_avg_anom","bhrs20_med_anom")]
+anoms<-burnListDF[,c("month","STA_NAME","meanDP","meanT","bhrs20","doy","date","bhrs20_avg_anom","bhrs20_med_anom","maxVPD","maxFFWI","maxHDW")]
 # convert F to C
 #anoms$meanDP<-(anoms$meanDP-32)*(5/9)
 #anoms$meanT<-(anoms$meanT-32)*(5/9)
@@ -398,21 +408,21 @@ summary(temp$ratio)
 
 #####
 ##### plot time series of station data -----
-# which(unique(burnListDF$STA_NAME)=="FLAGSTAFF")
-# temp<-subset(anoms, STA_NAME=="FLAGSTAFF")
-# temp<-subset(temp, date>="2010-06-01" & date<="2010-07-10")
-# temp<-temp[,c("date","bhrs20_med_anom","anomT","anomDP","meanT","meanDP","bhrs20")]
-# temp<-tidyr::gather(temp, var, value, 2:4)
+# which(unique(burnListDF$STA_NAME)=="GLOBE")
+# temp<-subset(anoms, STA_NAME=="GLOBE")
+# temp<-subset(temp, date>="2021-06-01" & date<="2021-07-05")
+# temp<-temp[,c("date","bhrs20_med_anom","anomT","anomDP","meanT","meanDP","bhrs20","maxFFWI","maxHDW")]
+# temp<-tidyr::gather(temp, var, value, 7:9)
 # 
 # ggplot(temp, aes(date,value, color=var))+
 #   geom_line()+
 #   geom_hline(yintercept = 0)+
-#   ggtitle("FLAGSTAFF RAWS - Schulz Fire 6/20-6/30")+
-#   geom_rect(aes(xmin = as.Date("2010-06-21"),
-#                 xmax = as.Date("2010-07-04"),
-#                 ymin = -13,
-#                 ymax = -12),
-#             fill = "goldenrod1", color = "firebrick", size = 0.5)+
+#   ggtitle("Globe RAWS - Telegraph Fire 6/1-7/5")+
+#   # geom_rect(aes(xmin = as.Date("2021-06-04"),
+#   #               xmax = as.Date("2021-07-02"),
+#   #               ymin = -13,
+#   #               ymax = -12),
+#   #           fill = "goldenrod1", color = "firebrick", size = 0.5)+
 #   theme_bw()+
 #   theme(legend.position='bottom')
 #####
@@ -568,4 +578,33 @@ temp1$July<-scale(temp1$meanBhrs20.1, center = TRUE, scale=FALSE)
 
 
 ggsave(filename="./figures/Fig7_monthlyBhrs.png", width=7, height=5, dpi = 600, device='png', p)
+
+
+# write out data file for repository
+
+repoDF<-burnListDF[,c("STA_NAME","LATITUDE","LONGITUDE","date","meanDP","meanT","bhrs20")]
+colnames(repoDF)<-c("RAWS_NAME","LATITUDE","LONGITUDE",
+                    "DATE","mean_daily_dewpoint_temperature_C",
+                    "mean_daily_air_temperature_C","burn_hours_RHlt20")
+write.csv2(repoDF,file="BurnPeriod_RAWS_data.csv")
+
+
+##### additions for revised version
+cor(burnListDF$bhrs20,burnListDF$maxFFWI)
+cor.test(burnListDF$bhrs20,burnListDF$maxFFWI, method = 'spearman')
+cor(burnListDF$bhrs20,burnListDF$maxHDW)
+cor.test(burnListDF$bhrs20,burnListDF$maxHDW, method = 'spearman')
+
+
+ggplot(burnListDF, aes(bhrs20,maxHDW))+
+  geom_bin2d(bins = 70) +
+  scale_fill_continuous(type = "viridis") +
+  theme_bw()
+
+corrs<- burnListDF %>% group_by(STA_NAME) %>%
+  summarise(bhrs_HDW=cor(bhrs20,maxHDW, method = 'spearman'),
+            bhrs_FFWI=cor(bhrs20,maxFFWI, method = 'spearman'),
+            bhrs_maxVPD=cor(bhrs20,maxVPD, method = 'spearman'))
+summary(corrs)
+
 

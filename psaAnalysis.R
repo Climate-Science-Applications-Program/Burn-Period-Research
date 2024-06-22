@@ -24,6 +24,11 @@ sw_psaDF<- cbind.data.frame(sw_psa, rgeos::gCentroid(sw_psa,byid=TRUE))
 sw_psa_df<-fortify(sw_psa)
 #####
 
+# get area of sw psa
+#f <- sf::st_read("/home/crimmins/RProjects/BurnPeriodTracker/shapes/National_PSA_Current.shp")
+
+
+
 # get monthly average burn hours per station 
 burnListDF<-do.call(rbind, burnList)
 
@@ -375,7 +380,7 @@ moYrFires<- fc@data %>% group_by(month,FIRE_YEAR) %>%
 moYrStats<-merge(moyrStats,moYrFires, by.x=c("month","year"),by.y=c("month","FIRE_YEAR"))
 
 temp<-moYrStats
-temp<-subset(moYrStats, month %in% c(4,5,6,7))
+temp<-subset(moYrStats, month %in% c(3:8))
 
 p1<-ggplot(temp, aes(year,totalAC, fill=as.factor(month), group=as.factor(month)))+
   geom_bar(stat = "identity", position = "dodge")+
@@ -402,6 +407,9 @@ ggplot(temp, aes(meanBhrs20,log(totalAC), color=as.factor(month), group=as.facto
   theme_bw()
 
 
+temp<-moYrStats
+temp<-subset(moYrStats, month %in% c(4:7))
+
 fireYr<-temp %>% group_by(year) %>% 
                   summarize(bhrs20=mean(meanBhrs20),
                             maxVPD=mean(meanMaxVPD),
@@ -415,7 +423,12 @@ my_fn <- function(data, mapping, ...){
     geom_smooth(method=lm, fill="blue", color="blue", ...)
   p
 }
-GGally::ggpairs(temp, title="SW Fire Season (Apr-July) Correlations",lower = list(continuous = my_fn)) 
+GGally::ggpairs(temp, title="SW Fire Season (Annual) Correlations",lower = list(continuous = my_fn)) 
+
+cor(fireYr$bhrs20,fireYr$maxVPD, method = "pearson")
+cor(fireYr$bhrs20,fireYr$logAc, method = "pearson")
+cor(fireYr$maxVPD,fireYr$logAc, method = "pearson")
+
 
 
 ##### mo/yr/psa fire-climate
@@ -427,7 +440,7 @@ moYrPSAFires<- fc@data %>% group_by(month,FIRE_YEAR,psa) %>%
 moYrPSAStats<-merge(moPSAStats,moYrPSAFires, by.x=c("month","year","psa"),by.y=c("month","FIRE_YEAR","psa"))
 
 temp<-moYrPSAStats
-temp<-subset(moYrPSAStats, month %in% c(3,4,5,6,7,8))
+temp<-subset(moYrPSAStats, month %in% c(3:8))
 
 corMoYr <- temp %>% group_by(psa) %>%
                             summarise(Bhrs20vAc=cor(meanBhrs20,log(totalAC)),
@@ -440,7 +453,7 @@ corMoYr <- temp %>% group_by(psa) %>%
 summary(corMoYr)
 
 
-ggplot(temp, aes(meanBhrs20,log(totalAC)))+
+ggplot(temp, aes(meanBhrs20,log(totalAC), color=as.factor(month)))+
   geom_point()+
   geom_smooth(method = "lm")+
   facet_wrap(.~psa)+
