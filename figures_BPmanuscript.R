@@ -588,15 +588,24 @@ colnames(repoDF)<-c("RAWS_NAME","LATITUDE","LONGITUDE",
                     "mean_daily_air_temperature_C","burn_hours_RHlt20")
 write.csv2(repoDF,file="BurnPeriod_RAWS_data.csv")
 
+# revised version with FFWI, HDW...
+repoDF<-burnListDF[,c("STA_NAME","LATITUDE","LONGITUDE","date","meanDP","meanT","bhrs20","maxFFWI","maxHDW","maxVPD")]
+colnames(repoDF)<-c("RAWS_NAME","LATITUDE","LONGITUDE",
+                    "DATE","mean_daily_dewpoint_temperature_C",
+                    "mean_daily_air_temperature_C","burn_hours_RHlt20", "max_FosbergFireWeatherIndex",
+                    "max_HotDryWindyIndex","max_VaporPressureDeficit_kPa")
+write.csv2(repoDF,file="BurnPeriod_RAWS_data_v2.csv")
+
 
 ##### additions for revised version
 cor(burnListDF$bhrs20,burnListDF$maxFFWI)
 cor.test(burnListDF$bhrs20,burnListDF$maxFFWI, method = 'spearman')
+cor.test(burnListDF$bhrs20,burnListDF$maxFFWI, method = 'pearson')
 cor(burnListDF$bhrs20,burnListDF$maxHDW)
 cor.test(burnListDF$bhrs20,burnListDF$maxHDW, method = 'spearman')
 
 
-ggplot(burnListDF, aes(bhrs20,maxHDW))+
+ggplot(burnListDF, aes(as.factor(bhrs20),maxHDW))+
   geom_bin2d(bins = 70) +
   scale_fill_continuous(type = "viridis") +
   theme_bw()
@@ -607,4 +616,17 @@ corrs<- burnListDF %>% group_by(STA_NAME) %>%
             bhrs_maxVPD=cor(bhrs20,maxVPD, method = 'spearman'))
 summary(corrs)
 
+corrs<- burnListDF %>% group_by(STA_NAME) %>%
+  summarise(bhrs_HDW=cor(bhrs20,maxHDW, method = 'pearson'),
+            bhrs_FFWI=cor(bhrs20,maxFFWI, method = 'pearson'),
+            bhrs_maxVPD=cor(bhrs20,maxVPD, method = 'pearson'))
+summary(corrs)
 
+plot(burnListDF$bhrs20,burnListDF$maxHDW)
+
+ggplot(burnListDF, aes(bhrs20,maxHDW))+
+  geom_point()+
+  geom_smooth(method = "lm")
+  #geom_bin2d(bins = 70) +
+  #scale_fill_continuous(type = "viridis") +
+  theme_bw()
