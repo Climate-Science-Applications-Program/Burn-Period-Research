@@ -7,7 +7,8 @@ library(raster)
 sf_use_s2(FALSE)
 
 # mtbs perims, updated dataset loaded on 11/29/23
-perims<-st_read("~/RProjects/BurnPeriodResearch/data/mtbs/us_perim/mtbs_perims_DD.shp")
+#perims<-st_read("~/RProjects/BurnPeriodResearch/data/mtbs/us_perim/mtbs_perims_DD.shp")
+perims<-st_read("~/RProjects/BurnPeriodResearch/data/mtbs_110524/mtbs_perims_DD.shp") # thru part of 2024
 #st_geometry_type(noaa20)
 st_crs(perims)
 perimsCrop<-st_intersection(perims, st_set_crs(st_as_sf(as(raster::extent(-115, -102, 31, 37.35), "SpatialPolygons")), st_crs(perims)))
@@ -19,7 +20,7 @@ perimsCrop<-as(perimsCrop, 'Spatial')
 #length(which(test$BurnBndAc>=5000))
 
 # save data file
-save(perimsCrop, file="~/RProjects/BurnPeriodResearch/data/AZNM_mtbs_perims_1984_2022.RData")
+save(perimsCrop, file="~/RProjects/BurnPeriodResearch/data/AZNM_mtbs_perims_1984_2024.RData")
 
 
 # add in provisional data accessed 7/17/23
